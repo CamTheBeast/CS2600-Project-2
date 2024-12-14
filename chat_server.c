@@ -9,11 +9,11 @@
 #include <time.h>
 
 #define PortNumber      8080
-#define BuffSize        1024
+#define BuffSize        2048
 #define MaxConnects     5
 #define ConversationLen 256
 #define Host            "127.0.0.1"
-#define LogFile         "chatlog.txt"
+#define LogFile         "chat_history"
 
 //Define client struct
 typedef struct Client {
@@ -118,8 +118,16 @@ void *handle_client(void *arg) {
 
         // Send message with timestamp
         get_timestamp(timestamp, sizeof(timestamp));
+
+        // Ensure message fits within the buffer
         char message[BuffSize];
-        snprintf(message, sizeof(message), "%s %s: %s", timestamp, client->username, buffer);
+        int len = snprintf(message, sizeof(message), "%s %s: %s", timestamp, client->username, buffer);
+
+        if (len >= sizeof(message)) {
+            // Truncate the message or handle error
+            message[BuffSize - 1] = '\0';  // Ensure null-termination
+        }
+
         printf("%s\n", message);
         log_message(message);
         broadcast_message(message);
